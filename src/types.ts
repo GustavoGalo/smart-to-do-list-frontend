@@ -25,7 +25,14 @@ export interface GenerateTodoApiResponse {
   count: number
 }
 
-export type ListTodosApiResponse = Todo[]
+export interface ListTodosApiResponse {
+  todos: Todo[]
+  metadata: {
+    countTodos: number;
+    countPendingTodos: number;
+    countCompletedTodos: number;
+  }
+}
 
 export interface UpdateTodoBody {
   id: string

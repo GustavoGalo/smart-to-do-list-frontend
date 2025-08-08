@@ -1,103 +1,246 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+import { useState, useCallback, MouseEvent, FormEvent } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Trash2, Plus, Sparkles, Loader2 } from "lucide-react";
+import { useListTodos } from "@/hooks/list-todos";
+import { useCreateTodo } from "@/hooks/create-todo";
+import { useDeleteTodo } from "@/hooks/delete-todo";
+import { useGenerateTodos } from "@/hooks/generate-todo";
+import { useUpdateTodo } from "@/hooks/update-todo";
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+export default function SmartTodoList() {
+  const [newTodoTitle, setNewTodoTitle] = useState("");
+  const [aiPrompt, setAiPrompt] = useState("");
+
+  const { data: response, isLoading, refetch: refetchTodos } = useListTodos();
+  const { mutate: createTodo } = useCreateTodo({
+    onSuccess: () => {
+      setNewTodoTitle("");
+      refetchTodos();
+    },
+  });
+  const { mutate: deleteTodo } = useDeleteTodo({
+    onSuccess: () => {
+      refetchTodos();
+    },
+  });
+  const { mutate: generateTodos, isPending: isGenerating } = useGenerateTodos({
+    onSuccess: () => {
+      setAiPrompt("");
+      refetchTodos();
+    },
+  });
+  const { mutate: updateTodo } = useUpdateTodo({
+    onSuccess: () => {
+      refetchTodos();
+    },
+  });
+
+  const handleAiTodosGeneration = useCallback(
+    (event: MouseEvent) => {
+      event.preventDefault();
+      generateTodos({ goal: aiPrompt });
+    },
+    [aiPrompt]
+  );
+
+  const handleTodoCreation = useCallback(
+    (event: FormEvent) => {
+      event.preventDefault();
+      createTodo({ title: newTodoTitle });
+    },
+    [newTodoTitle]
+  );
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Carregando tarefas...</span>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl font-bold text-gray-900">Smart To-Do List</h1>
+          <p className="text-gray-600">
+            Gerencie suas tarefas com inteligência artificial
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                {response?.metadata.countTodos}
+              </div>
+              <div className="text-sm text-gray-600">Total de Tarefas</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-green-600">
+                {response?.metadata.countCompletedTodos}
+              </div>
+              <div className="text-sm text-gray-600">Concluídas</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-orange-600">
+                {response?.metadata.countPendingTodos}
+              </div>
+              <div className="text-sm text-gray-600">Pendentes</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-purple-600" />
+                Gerador de Tarefas IA
+              </CardTitle>
+              <CardDescription>
+                Descreva seu objetivo e a IA criará uma lista de tarefas para
+                você
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Textarea
+                placeholder="Ex: Planejar uma viagem para Paris, Organizar um evento de aniversário, Aprender React..."
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                rows={3}
+              />
+              <Button
+                onClick={handleAiTodosGeneration}
+                disabled={!aiPrompt.trim() || isGenerating}
+                className="w-full"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Gerando tarefas...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Gerar Tarefas com IA
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plus className="h-5 w-5 text-green-600" />
+                Adicionar Tarefa Manual
+              </CardTitle>
+              <CardDescription>
+                Crie uma tarefa específica manualmente
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleTodoCreation} className="space-y-4">
+                <Input
+                  placeholder="Digite o título da tarefa..."
+                  value={newTodoTitle}
+                  onChange={(e) => setNewTodoTitle(e.target.value)}
+                />
+                <Button
+                  type="submit"
+                  disabled={!newTodoTitle.trim()}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Tarefa
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Suas Tarefas</CardTitle>
+            <CardDescription>
+              Gerencie e acompanhe o progresso das suas tarefas
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {response === undefined || response.metadata.countTodos === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>Nenhuma tarefa encontrada.</p>
+                <p className="text-sm">
+                  Adicione uma tarefa manualmente ou use a IA para gerar
+                  tarefas.
+                </p>
+              </div>
+            ) : (
+              <>
+                {response.todos.length > 0 && (
+                  <div className="space-y-3">
+                    {response.todos.map((todo) => (
+                      <div
+                        key={todo.id}
+                        className="flex items-center gap-3 p-3 bg-white rounded-lg border hover:shadow-md transition-shadow"
+                      >
+                        <Checkbox
+                          checked={todo.isCompleted}
+                          onCheckedChange={() =>
+                            updateTodo({
+                              isCompleted: !todo.isCompleted,
+                              id: todo.id,
+                            })
+                          }
+                        />
+                        <div className="flex-1">
+                          <p className="font-medium">{todo.title}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-gray-500">
+                              {new Date(todo.createdAt).toLocaleDateString(
+                                "pt-BR"
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => deleteTodo(todo)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
