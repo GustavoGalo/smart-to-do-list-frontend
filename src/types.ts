@@ -3,6 +3,7 @@ export interface Todo {
   title: string;
   isCompleted: boolean;
   createdAt: string;
+  generatedByAI: boolean
 }
 
 export interface CreateTodoBody {

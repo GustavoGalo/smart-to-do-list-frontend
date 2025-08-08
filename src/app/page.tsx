@@ -18,6 +18,7 @@ import { useCreateTodo } from "@/hooks/create-todo";
 import { useDeleteTodo } from "@/hooks/delete-todo";
 import { useGenerateTodos } from "@/hooks/generate-todo";
 import { useUpdateTodo } from "@/hooks/update-todo";
+import { Badge } from "@/components/ui/badge";
 
 export default function SmartTodoList() {
   const [newTodoTitle, setNewTodoTitle] = useState("");
@@ -222,6 +223,12 @@ export default function SmartTodoList() {
                                 "pt-BR"
                               )}
                             </span>
+                            {todo.generatedByAI && (
+                              <Badge variant="outline" className="text-xs">
+                                <Sparkles className="h-3 w-3 mr-1" />
+                                IA
+                              </Badge>
+                            )}
                           </div>
                         </div>
                         <Button
