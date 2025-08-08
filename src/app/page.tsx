@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, MouseEvent, FormEvent } from "react";
+import React, { useState, useCallback, MouseEvent, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +19,7 @@ import { useDeleteTodo } from "@/hooks/delete-todo";
 import { useGenerateTodos } from "@/hooks/generate-todo";
 import { useUpdateTodo } from "@/hooks/update-todo";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 export default function SmartTodoList() {
   const [newTodoTitle, setNewTodoTitle] = useState("");
@@ -29,22 +30,41 @@ export default function SmartTodoList() {
     onSuccess: () => {
       setNewTodoTitle("");
       refetchTodos();
+      toast.success("Tarefa criada com sucesso!");
+    },
+    onError: () => {
+      toast.error("Erro ao criar tarefa. Tente novamente.");
     },
   });
   const { mutate: deleteTodo } = useDeleteTodo({
     onSuccess: () => {
       refetchTodos();
+      toast.success("Tarefa removida com sucesso!");
+    },
+    onError: () => {
+      toast.error("Erro ao remover tarefa. Tente novamente.");
     },
   });
   const { mutate: generateTodos, isPending: isGenerating } = useGenerateTodos({
     onSuccess: () => {
       setAiPrompt("");
       refetchTodos();
+      toast.success("Tarefas geradas com sucesso!");
+    },
+    onError: () => {
+      toast.error("Erro ao gerar tarefas. Tente novamente.");
     },
   });
   const { mutate: updateTodo } = useUpdateTodo({
-    onSuccess: () => {
+    onSuccess: (updatedTodo) => {
       refetchTodos();
+      const message = updatedTodo.isCompleted
+        ? "Tarefa marcada como concluída!"
+        : "Tarefa marcada como pendente!";
+      toast.success(message);
+    },
+    onError: () => {
+      toast.error("Erro ao atualizar tarefa. Tente novamente.");
     },
   });
 
@@ -53,7 +73,7 @@ export default function SmartTodoList() {
       event.preventDefault();
       generateTodos({ goal: aiPrompt });
     },
-    [aiPrompt]
+    [aiPrompt, generateTodos]
   );
 
   const handleTodoCreation = useCallback(
@@ -61,7 +81,7 @@ export default function SmartTodoList() {
       event.preventDefault();
       createTodo({ title: newTodoTitle });
     },
-    [newTodoTitle]
+    [newTodoTitle, createTodo]
   );
 
   if (isLoading) {
@@ -208,12 +228,12 @@ export default function SmartTodoList() {
                       >
                         <Checkbox
                           checked={todo.isCompleted}
-                          onCheckedChange={() =>
+                          onCheckedChange={() => {
                             updateTodo({
                               isCompleted: !todo.isCompleted,
                               id: todo.id,
-                            })
-                          }
+                            });
+                          }}
                         />
                         <div className="flex-1">
                           <p className="font-medium">{todo.title}</p>
